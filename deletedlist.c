@@ -53,9 +53,10 @@ void deletedlist_insert(DeletedList *list, deletedbook hb)
     i = list->size - 1;
     if (list->strategy == BESTFIT)
     {
-        while (i>=0 && list->hueco[i].)
+        while (i>=0 && list->hueco[i].size>hb.size)
         {
-            /* code */
+            list->hueco[i+1]=list->hueco[i];
+            i--;
         }
         
     }
