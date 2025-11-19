@@ -11,6 +11,7 @@ DeletedList *deletedlist_create(int strategy)
     array = (DeletedList *)malloc(sizeof(DeletedList));
     if (array == NULL)
     {
+        printf("j");
         return NULL;
     }
     array->capacity = 5;
