@@ -28,6 +28,7 @@ DeletedList *deletedlist_create(int strategy)
 
 void deletedlist_insert(DeletedList *list, deletedbook hb)
 {
+    int i;
     deletedbook *aux;
     if (!list)
     {
@@ -44,8 +45,20 @@ void deletedlist_insert(DeletedList *list, deletedbook hb)
         }
         list->hueco = aux;
     }
-    list->hueco[list->size] = hb;
-    list->size++;
+    if (list->strategy = FIRSTFIT)
+    {
+        list->hueco[list->size] = hb;
+        list->size++;
+    }
+    i = list->size - 1;
+    if (list->strategy == BESTFIT)
+    {
+        while (i>=0 && list->hueco[i].)
+        {
+            /* code */
+        }
+        
+    }
 }
 /*Buscar hueco según estrategia*/
 int deletedlist_find(DeletedList *list, size_t size_needed)
@@ -73,7 +86,7 @@ int deletedlist_find(DeletedList *list, size_t size_needed)
         best_size = (size_t)-1;
         for (int i = 0; i < (int)list->size; i++)
         {
-            if (list->hueco[i].size >= size_needed &&  list->hueco[i].size < best_size)
+            if (list->hueco[i].size >= size_needed && list->hueco[i].size < best_size)
             {
                 best_size = list->hueco[i].size;
                 pos = i;
@@ -100,6 +113,4 @@ int deletedlist_find(DeletedList *list, size_t size_needed)
     return -1;
 }
 
-int deletedlist_find(DeletedList *list, size_t size_needed)
-{
-}
+void deletedlist_remove(DeletedList *list, int pos)

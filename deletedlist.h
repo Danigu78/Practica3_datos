@@ -12,8 +12,8 @@
 
 typedef struct 
 {
-    size_t offset ;/*Posicion en el fichero*/
-    size_t size; /* Tamaño del registro eluiminado*/
+    size_t offset ;/*Posicion en el fichero*/ 
+    size_t size; /* Tamaño del registro eliminado*/
 }deletedbook;
 
 typedef struct 
