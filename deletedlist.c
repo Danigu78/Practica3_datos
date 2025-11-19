@@ -26,41 +26,33 @@ DeletedList *deletedlist_create(int strategy)
     return array;
 }
 
-void deletedlist_insert(DeletedList *list, deletedbook hb)
-{
-    int i;
-    deletedbook *aux;
-    if (!list)
-    {
-        fprintf(stderr, "No hay lista de huecos");
-        return;
-    }
-    if (list->size == list->capacity)
-    {
-        list->capacity *= 2;
-        aux = realloc(list->hueco, list->capacity * sizeof(deletedbook));
-        if (aux == NULL)
-        {
-            return;
+/* Ordenar lista de huecos según la estrategia */
+void deletedlist_sort(DeletedList *list) {
+    if (!list) return;
+
+    /* FIRSTFIT no necesita ordenar */
+    if (list->strategy == FIRSTFIT) return;
+
+    deletedbook temporal;
+    for (size_t i = 0; i < list->size; i++) {
+        for (size_t j = i + 1; j < list->size; j++) {
+            if ((list->strategy == BESTFIT && list->hueco[i].size > list->hueco[j].size) ||
+                (list->strategy == WORSTFIT && list->hueco[i].size < list->hueco[j].size)) {
+                temporal = list->hueco[i];
+                list->hueco[i] = list->hueco[j];
+                list->hueco[j] = temporal;
+            }
         }
-        list->hueco = aux;
-    }
-    if (list->strategy = FIRSTFIT)
-    {
-        list->hueco[list->size] = hb;
-        list->size++;
-    }
-    i = list->size - 1;
-    if (list->strategy == BESTFIT)
-    {
-        while (i>=0 && list->hueco[i].size>hb.size)
-        {
-            list->hueco[i+1]=list->hueco[i];
-            i--;
-        }
-        
     }
 }
+
+void deletedlist_insert(DeletedList *list, deletedbook hb) {
+    if (!list) return;
+    if (list->size == list->capacity) deletedlist_expand(list);
+    list->hueco[list->size++] = hb;
+    deletedlist_sort(list);
+}
+
 /*Buscar hueco según estrategia*/
 int deletedlist_find(DeletedList *list, size_t size_needed)
 {
