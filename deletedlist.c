@@ -49,8 +49,8 @@ void deletedlist_sort(DeletedList *list) {
 void deletedlist_insert(DeletedList *list, deletedbook hb) {
     if (!list) return;
     if (list->size == list->capacity) deletedlist_expand(list);
-    list->hueco[list->size++] = hb;
-    deletedlist_sort(list);
+    list->hueco[list->size++] = hb;/*Lo metemos al final pero una vez metido la ordenamos*/
+    deletedlist_sort(list);/*CON ESTA FUNCION SI EL */
 }
 
 /*Buscar hueco según estrategia*/
