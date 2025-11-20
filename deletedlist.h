@@ -33,4 +33,19 @@ int deletedlist_find(DeletedList *list, size_t needed_size, deletedbook *hb);
 
 /*Eliminar huecos*/
 void deletedlist_destroy(DeletedList *list) ;
+
+/* 
+ * Guardar la lista de huecos en disco en formato binario.
+ * Se guarda la estrategia al principio y luego cada hueco con offset y size.
+ */
+int deletedlist_save(DeletedList *list, const char *filename);
+
+/* 
+ * Cargar la lista de huecos desde un fichero binario (*.lst)
+ * El fichero tiene la siguiente estructura:
+ * [int strategy][deletedbook 1][deletedbook 2]...[deletedbook n]
+ * Devuelve un puntero a la lista en memoria, o NULL si hubo error.
+ */
+DeletedList *deletedlist_load(const char *filename);
+
 #endif// Quitar hueco

@@ -146,3 +146,106 @@ void deletedlist_destroy(DeletedList *list) {
     if (list->hueco) free(list->hueco);
     free(list);
 }
+
+
+/* 
+ * Guardar la lista de huecos en disco (*.lst) en formato binario
+ * Estructura del fichero:
+ * [int strategy][deletedbook 1][deletedbook 2]...[deletedbook n]
+ * Devuelve 1 si se guardó correctamente, 0 si hubo error.
+ */
+int deletedlist_save(DeletedList *list, const char *filename){
+ int i;
+    if (list==NULL||!filename)
+ {
+    return EXIT_FAILURE;
+ }
+ FILE *fp=fopen(filename,"wb");
+    if (!fp)
+    {
+        fprintf(stderr, "Error al abrir el fichero %s para escritura\n", filename);
+        return 0;
+    }
+    /*Aqui metemos la estrategia que vamos a usar en cada de meter nuevos*/
+    if (fwrite(&list->strategy,sizeof(int),1,fp)!=1)
+    {
+        fprintf(stderr, "Error al escribir la estrategia que utilizaremos para rellenar huecos een %s\n", filename);
+        fclose(fp);
+        return 0;
+    }
+    
+    for ( i = 0; i < list->size; i++)
+    {
+       if (fwrite(&list->hueco[i],sizeof(deletedbook),1,fp)!=1)/*Esa funcion devuelve 1 si se ha escrito bien la linea*/
+       {
+        fprintf(stderr,"Error al escribir un hueco");
+        fclose(fp);
+        return 0;
+       }
+    }
+    fclose(fp);
+    return 1; // Guardado correcto
+}
+DeletedList *deletedlist_load(const char *filename)
+{
+    DeletedList *list=NULL;
+    deletedbook temp;
+    if (filename==NULL)
+    {
+        return NULL;
+    }
+    FILE*fp=fopen(filename,"rb");
+    if (fp==NULL)
+    {
+        fprintf(stderr,"No se ha podido leer el fichero de datos");
+        return NULL;
+    }
+    list=(DeletedList*)malloc(sizeof(DeletedList));
+    if (list==NULL)
+    {
+        return NULL;
+    }
+    if (fread(&list->strategy,sizeof(int),1,fp)!=1)
+    {
+        fprintf(stderr,"Error al leer la estrategia del fichero");
+        free(list);
+        fclose(fp);
+        return NULL;
+    }
+    list->size=0;
+    list->capacity = 5;
+    list->hueco = (deletedbook *)malloc(list->capacity * sizeof(deletedbook));
+    if (!list->hueco)
+    {
+        free(list);
+        fclose(fp);
+        return NULL;
+    }
+
+    // Leer todos los registros del fichero
+    deletedbook temp;
+    while (fread(&temp, sizeof(deletedbook), 1, fp) == 1)
+    {
+        // Realloc si es necesario
+        if (list->size == list->capacity)
+        {
+            list->capacity *= 2;
+            deletedbook *aux = (deletedbook *)realloc(list->hueco, list->capacity * sizeof(deletedbook));
+            if (!aux)
+            {
+                fprintf(stderr, "Error al hacer realloc en deletedlist_load\n");
+                free(list->hueco);
+                free(list);
+                fclose(fp);
+                return NULL;
+            }
+            list->hueco = aux;
+        }
+
+        /*Añaadimos el hueco a la lista*/
+        list->hueco[list->size++] = temp;
+    }
+
+    fclose(fp);
+    
+}
