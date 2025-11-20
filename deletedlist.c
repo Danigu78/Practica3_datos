@@ -222,8 +222,7 @@ DeletedList *deletedlist_load(const char *filename)
         return NULL;
     }
 
-    // Leer todos los registros del fichero
-    deletedbook temp;
+  
     while (fread(&temp, sizeof(deletedbook), 1, fp) == 1)
     {
         // Realloc si es necesario

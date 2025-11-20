@@ -12,7 +12,7 @@ Index *index_create()
     {
         return NULL;
     }
-    indice->array = (Index *)calloc(CAPACITY_INDEX, sizeof(Index));
+    indice->array = (indexbook *)calloc(CAPACITY_INDEX, sizeof(indexbook));
     if (indice->array == NULL)
     {
         free(indice);
