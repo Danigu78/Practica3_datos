@@ -19,7 +19,7 @@ size_t writeRecord(FILE *db, int bookID, const char *isbn,
     size_t title_len = strlen(title);
     size_t printed_len = strlen(printedBy);
 
-    size_t total = 4 + 16 + (title_len + 1) + printed_len;
+    size_t total = sizeof(int) + 16 + (title_len + 1) + printed_len;
 
     fwrite(&total, sizeof(size_t), 1, db);
     fwrite(&bookID, sizeof(int), 1, db);
