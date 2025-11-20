@@ -27,17 +27,23 @@ DeletedList *deletedlist_create(int strategy)
 }
 
 /* Ordenar lista de huecos según la estrategia */
-void deletedlist_sort(DeletedList *list) {
-    if (!list) return;
+void deletedlist_sort(DeletedList *list)
+{
+    if (!list)
+        return;
 
     /* FIRSTFIT no necesita ordenar */
-    if (list->strategy == FIRSTFIT) return;
+    if (list->strategy == FIRSTFIT)
+        return;
 
     deletedbook temporal;
-    for (size_t i = 0; i < list->size; i++) {
-        for (size_t j = i + 1; j < list->size; j++) {
+    for (size_t i = 0; i < list->size; i++)
+    {
+        for (size_t j = i + 1; j < list->size; j++)
+        {
             if ((list->strategy == BESTFIT && list->hueco[i].size > list->hueco[j].size) ||
-                (list->strategy == WORSTFIT && list->hueco[i].size < list->hueco[j].size)) {
+                (list->strategy == WORSTFIT && list->hueco[i].size < list->hueco[j].size))
+            {
                 temporal = list->hueco[i];
                 list->hueco[i] = list->hueco[j];
                 list->hueco[j] = temporal;
@@ -45,65 +51,98 @@ void deletedlist_sort(DeletedList *list) {
         }
     }
 }
+void deletedlist_insert(DeletedList *list, deletedbook hb)
+{
+    deletedbook *aux = NULL;
+    if (!list)
+        return;
 
-void deletedlist_insert(DeletedList *list, deletedbook hb) {
-    if (!list) return;
-    if (list->size == list->capacity) deletedlist_expand(list);
-    list->hueco[list->size++] = hb;/*Lo metemos al final pero una vez metido la ordenamos*/
-    deletedlist_sort(list);/*CON ESTA FUNCION SI EL */
+    if (list->size == list->capacity)
+    {
+        list->capacity *= 2;
+
+        aux = realloc(list->hueco, list->capacity * sizeof(deletedbook));
+        if (!aux)
+        {
+            fprintf(stderr, "Error al hacer realloc en deletedlist_insert\n");
+            return;
+        }
+
+        list->hueco = aux;
+    }
+
+    /* Insertar al final */
+    list->hueco[list->size] = hb;
+    list->size++;
+
+    /* Ordenar después de insertar */
+    deletedlist_sort(list);
 }
 
 /*Buscar hueco según estrategia*/
-int deletedlist_find(DeletedList *list, size_t size_needed)
+int deletedlist_find(DeletedList *list, size_t needed_size, deletedbook *hb)
 {
-    if (!list || list->size == 0) /*Si en el array de huecos no hay hucos no podemos encontrar un hueco donde insertar nada*/
-    {
-        return -1;
-    }
-    int pos = -1;
-    int best_size;
+    if (!list || !hb)
+        return 0;
+
     int i;
-    size_t bestsize;
-    switch (list->strategy)
+    int found_index = -1;
+
+    deletedlist_sort(list);
+
+    if (list->strategy == FIRSTFIT)
     {
-    case FIRSTFIT:
         for (i = 0; i < list->size; i++)
         {
-            if (list->hueco[i].size >= size_needed) /*Buscamos el primer hueco que nos valga*/
+            if (list->hueco[i].size >= needed_size)
             {
-                return i; /*Devolvemos el primero que nos valaga*/
+                found_index = i;
+                break; // Primer hueco que cabe
             }
         }
-        break;
-    case BESTFIT:
-        best_size = (size_t)-1;
-        for (int i = 0; i < (int)list->size; i++)
+    }
+    else
+    {
+        /*La lista ya esta ordenada luego vamos acoger el primer elemento que quepa, es decir si el heuco es mayor que lo que necesitamos ya lo cogemos*/
+        for (i = 0; i < list->size; i++)
         {
-            if (list->hueco[i].size >= size_needed && list->hueco[i].size < best_size)
+            if (list->hueco[i].size >= needed_size)
             {
-                best_size = list->hueco[i].size;
-                pos = i;
+                found_index = i;
+                break; /*Solo buscamos uno donde quepa luyego salimos del bucle*/
             }
         }
-        return pos;
-
-    case WORSTFIT:
-        best_size = 0;
-        for (int i = 0; i < (int)list->size; i++)
-        {
-            if (list->hueco[i].size >= size_needed && list->hueco[i].size > best_size)
-            {
-                best_size = list->hueco[i].size;
-                pos = i;
-            }
-        }
-        return pos;
-
-    default:
-        return -1;
     }
 
-    return -1;
+    if (found_index == -1)/*No se ha encontrado un hueco donde quepa por lo que si queremos implementar un nuevo libro a la biblioteca habra que hacerlo al final del registro*/
+        return 0; 
+
+   /*Copiamos los datos del fichero que hemos encontrado*/
+    *hb = list->hueco[found_index];
+
+    if (list->hueco[found_index].size == needed_size)/*Di el hueco encontrado es exactamente igual de tamaño que lo que necesitamos lo que hacemos es eliminar de la lista ese hueco */
+    {
+        // 
+        for (i = found_index; i < list->size - 1; i++)
+        {
+            list->hueco[i] = list->hueco[i + 1];/*Desplazamos */
+        }
+        list->size--;/*Bajamos el numero de huecos que hay en la lista*/
+    }
+    else
+    {
+        /* Hueco más grande: ajustamos offset y tamaño del hueco sobrante*/
+        list->hueco[found_index].offset += needed_size;
+        list->hueco[found_index].size -= needed_size;
+
+        hb->size = needed_size;
+    }
+
+    return 1; /*Hueco encontrado y asignado*/
 }
 
-void deletedlist_remove(DeletedList *list, int pos)
+void deletedlist_destroy(DeletedList *list) {
+    if (!list) return;
+    if (list->hueco) free(list->hueco);
+    free(list);
+}

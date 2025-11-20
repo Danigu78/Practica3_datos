@@ -29,8 +29,8 @@ DeletedList *deletedlist_create(int strategy);
 void deletedlist_insert(DeletedList *list, deletedbook hb);
 
 /*Buscar hueco según estrategia*/ 
-int deletedlist_find(DeletedList *list, size_t size_needed);
+int deletedlist_find(DeletedList *list, size_t needed_size, deletedbook *hb);
 
 /*Eliminar huecos*/
-void deletedlist_remove(DeletedList *list, int pos);
+void deletedlist_destroy(DeletedList *list) ;
 #endif// Quitar hueco
