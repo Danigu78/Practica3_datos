@@ -114,20 +114,20 @@ int deletedlist_find(DeletedList *list, size_t needed_size, deletedbook *hb)
         }
     }
 
-    if (found_index == -1)/*No se ha encontrado un hueco donde quepa por lo que si queremos implementar un nuevo libro a la biblioteca habra que hacerlo al final del registro*/
-        return 0; 
+    if (found_index == -1) /*No se ha encontrado un hueco donde quepa por lo que si queremos implementar un nuevo libro a la biblioteca habra que hacerlo al final del registro*/
+        return 0;
 
-   /*Copiamos los datos del fichero que hemos encontrado*/
+    /*Copiamos los datos del fichero que hemos encontrado*/
     *hb = list->hueco[found_index];
 
-    if (list->hueco[found_index].size == needed_size)/*Di el hueco encontrado es exactamente igual de tamaño que lo que necesitamos lo que hacemos es eliminar de la lista ese hueco */
+    if (list->hueco[found_index].size == needed_size) /*Di el hueco encontrado es exactamente igual de tamaño que lo que necesitamos lo que hacemos es eliminar de la lista ese hueco */
     {
-        // 
+        //
         for (i = found_index; i < list->size - 1; i++)
         {
-            list->hueco[i] = list->hueco[i + 1];/*Desplazamos */
+            list->hueco[i] = list->hueco[i + 1]; /*Desplazamos */
         }
-        list->size--;/*Bajamos el numero de huecos que hay en la lista*/
+        list->size--; /*Bajamos el numero de huecos que hay en la lista*/
     }
     else
     {
@@ -141,78 +141,81 @@ int deletedlist_find(DeletedList *list, size_t needed_size, deletedbook *hb)
     return 1; /*Hueco encontrado y asignado*/
 }
 
-void deletedlist_destroy(DeletedList *list) {
-    if (!list) return;
-    if (list->hueco) free(list->hueco);
+void deletedlist_destroy(DeletedList *list)
+{
+    if (!list)
+        return;
+    if (list->hueco)
+        free(list->hueco);
     free(list);
 }
 
-
-/* 
+/*
  * Guardar la lista de huecos en disco (*.lst) en formato binario
  * Estructura del fichero:
  * [int strategy][deletedbook 1][deletedbook 2]...[deletedbook n]
  * Devuelve 1 si se guardó correctamente, 0 si hubo error.
  */
-int deletedlist_save(DeletedList *list, const char *filename){
- int i;
-    if (list==NULL||!filename)
- {
-    return EXIT_FAILURE;
- }
- FILE *fp=fopen(filename,"wb");
+int deletedlist_save(DeletedList *list, const char *filename)
+{
+    int i;
+    if (list == NULL || !filename)
+    {
+        return EXIT_FAILURE;
+    }
+    FILE *fp = fopen(filename, "wb");
     if (!fp)
     {
         fprintf(stderr, "Error al abrir el fichero %s para escritura\n", filename);
         return 0;
     }
     /*Aqui metemos la estrategia que vamos a usar en cada de meter nuevos*/
-    if (fwrite(&list->strategy,sizeof(int),1,fp)!=1)
+    if (fwrite(&list->strategy, sizeof(int), 1, fp) != 1)
     {
         fprintf(stderr, "Error al escribir la estrategia que utilizaremos para rellenar huecos een %s\n", filename);
         fclose(fp);
         return 0;
     }
-    
-    for ( i = 0; i < list->size; i++)
+
+    for (i = 0; i < list->size; i++)
     {
-       if (fwrite(&list->hueco[i],sizeof(deletedbook),1,fp)!=1)/*Esa funcion devuelve 1 si se ha escrito bien la linea*/
-       {
-        fprintf(stderr,"Error al escribir un hueco");
-        fclose(fp);
-        return 0;
-       }
+        if (fwrite(&list->hueco[i], sizeof(deletedbook), 1, fp) != 1) /*Esa funcion devuelve 1 si se ha escrito bien la linea*/
+        {
+            fprintf(stderr, "Error al escribir un hueco");
+            fclose(fp);
+            return 0;
+        }
     }
     fclose(fp);
     return 1; // Guardado correcto
 }
 DeletedList *deletedlist_load(const char *filename)
 {
-    DeletedList *list=NULL;
+    DeletedList *list = NULL;
     deletedbook temp;
-    if (filename==NULL)
+    if (filename == NULL)
     {
         return NULL;
     }
-    FILE*fp=fopen(filename,"rb");
-    if (fp==NULL)
+    FILE *fp = fopen(filename, "rb");
+    if (fp == NULL)
     {
-        fprintf(stderr,"No se ha podido leer el fichero de datos");
+        fprintf(stderr, "No se ha podido leer el fichero de datos");
         return NULL;
     }
-    list=(DeletedList*)malloc(sizeof(DeletedList));
-    if (list==NULL)
+    list = (DeletedList *)malloc(sizeof(DeletedList));
+    if (list == NULL)
     {
         return NULL;
     }
-    if (fread(&list->strategy,sizeof(int),1,fp)!=1)
+    if (fread(&list->strategy, sizeof(int), 1, fp) != 1)
     {
-        fprintf(stderr,"Error al leer la estrategia del fichero");
+        fprintf(stderr, "Error al leer la estrategia del fichero");
         free(list);
         fclose(fp);
         return NULL;
     }
-    list->size=0;
+    list->size = 0;
     list->capacity = 5;
     list->hueco = (deletedbook *)malloc(list->capacity * sizeof(deletedbook));
     if (!list->hueco)
@@ -222,7 +225,6 @@ DeletedList *deletedlist_load(const char *filename)
         return NULL;
     }
 
-  
     while (fread(&temp, sizeof(deletedbook), 1, fp) == 1)
     {
         // Realloc si es necesario
@@ -246,5 +248,4 @@ DeletedList *deletedlist_load(const char *filename)
     }
 
     fclose(fp);
-    
 }
