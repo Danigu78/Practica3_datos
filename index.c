@@ -2,114 +2,110 @@
 #include <stdlib.h>
 #include <string.h>
 #include "index.h"
+
 #define CAPACITY_INDEX 100
 
+/* -----------------------------------------------------------
+ * Crea un índice vacío
+ * ----------------------------------------------------------- */
 Index *index_create()
 {
-    Index *indice = NULL;
-    indice = malloc(sizeof(Index));
-    if (indice == NULL)
-    {
-        return NULL;
-    }
-    indice->array = (indexbook *)calloc(CAPACITY_INDEX, sizeof(indexbook));
-    if (indice->array == NULL)
+    Index *indice = malloc(sizeof(Index));
+    if (!indice) return NULL;
+
+    indice->array = calloc(CAPACITY_INDEX, sizeof(indexbook));
+    if (!indice->array)
     {
         free(indice);
         return NULL;
     }
+
     indice->size = 0;
     indice->capacity = CAPACITY_INDEX;
     return indice;
 }
+
+/* -----------------------------------------------------------
+ * Libera memoria del índice
+ * ----------------------------------------------------------- */
 void index_free(Index *idx)
 {
-    if (idx == NULL)
-    {
-        return;
-    }
+    if (!idx) return;
     free(idx->array);
     free(idx);
 }
 
+/* -----------------------------------------------------------
+ * Búsqueda binaria en el índice
+ * Devuelve la posición si se encuentra, -1 si no
+ * Si no se encuentra, *pos contiene posición de inserción
+ * ----------------------------------------------------------- */
 int index_binary_search(Index *idx, int key, int *pos)
 {
-    int left = 0;
-    int right = idx->size - 1;
-    int mid;
+    int left = 0, right = (int)idx->size - 1, mid;
 
     while (left <= right)
     {
-        mid = (right + left) / 2;
-        if (idx->array[mid].key == key)
-        {
-            return mid;
-        }
-        else if (key < idx->array[mid].key)
-        {
-            right = mid - 1;
-        }
-        else
-        {
-            left = mid + 1;
-        }
+        mid = (left + right) / 2;
+        if (idx->array[mid].key == key) return mid;
+        else if (key < idx->array[mid].key) right = mid - 1;
+        else left = mid + 1;
     }
-    /*Clave no encontrada- Left indica la posicion de insercion*/
-    if (pos)
-        *pos = left; /*Posicion donde deberia insetarse*/
+
+    if (pos) *pos = left;
     return -1;
 }
 
-// Inserta entry manteniendo el índice ordenado por key.
-// No permite duplicados.
+/* -----------------------------------------------------------
+ * Inserta entry manteniendo el índice ordenado por key
+ * No permite duplicados
+ * ----------------------------------------------------------- */
 void index_insert(Index *idx, indexbook entry)
 {
-    int posicion = 0;
-    int encontrado;
+    if (!idx) return;
 
-    indexbook *temp = NULL;
-    if (idx == NULL)
-    {
-        return;
-    }
-    encontrado = index_binary_search(idx, entry.key, &posicion);
+    int posicion = 0;
+    int encontrado = index_binary_search(idx, entry.key, &posicion);
     if (encontrado >= 0)
     {
-        fprintf(stderr, "El registro con el BookaID=%d ya existe en la libreria, por lo que no se puede insertar", entry.key);
+        fprintf(stderr, "El registro con el BookID=%d ya existe en la libreria, por lo que no se puede insertar\n", entry.key);
         return;
     }
 
     if (idx->capacity == idx->size)
     {
         idx->capacity *= 2;
-        temp = realloc(idx->array, idx->capacity * sizeof(indexbook));
+        indexbook *temp = realloc(idx->array, idx->capacity * sizeof(indexbook));
         if (!temp)
         {
-            fprintf(stderr, "La nueva reserva de memoria, aumentando la que había ha sido erronea\n");
+            fprintf(stderr, "Error al aumentar la memoria del índice\n");
             return;
         }
         idx->array = temp;
     }
 
-    if (posicion < (idx->size)) /*Si la posicion en la que debemos meter el elemento para que quede ordenado no queda al final*/
+    if (posicion < (int)idx->size)
     {
-        memmove(&idx->array[posicion + 1], &idx->array[posicion], (idx->size - posicion) * sizeof(indexbook)); /*Lo que hacemos es desplazar los elementos para hacer huedco en el sitio donde metemos el elemento*/
+        memmove(&idx->array[posicion + 1], &idx->array[posicion],
+                (idx->size - posicion) * sizeof(indexbook));
     }
 
     idx->array[posicion] = entry;
     idx->size++;
 }
+
+/* -----------------------------------------------------------
+ * Elimina un registro del índice en la posición pos
+ * ----------------------------------------------------------- */
 void index_remove(Index *idx, int pos)
 {
-    if (!idx || pos < 0 || pos > idx->size)
-    {
-        return;
-    }
+    if (!idx || pos < 0 || pos >= (int)idx->size) return;
+
     if (pos < (int)idx->size - 1)
     {
         memmove(&idx->array[pos], &idx->array[pos + 1],
                 (idx->size - pos - 1) * sizeof(indexbook));
     }
+
     idx->size--;
-    return;
 }

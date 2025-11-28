@@ -51,4 +51,10 @@ int db_add_record(const char *db_filename, DeletedList *deleted_list, Index *idx
  * ----------------------------------------------------------- */
 int db_delete_record(const char *db_filename, DeletedList *deleted_list, Index *idx, int bookID);
 
-#endif /* DATA_H */
+
+/*--Toma un strinf con barras y todo y saca los datos para convertirlo en un registro listo para añadir a la base*/
+
+
+
+int convert_record( const char *line, Record *reg);
+#endif 
