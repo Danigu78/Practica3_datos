@@ -63,24 +63,28 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-del = deletedlist_load(lst_filename);
-if (!del) {
-    // Si no existe el fichero o falla la carga, creamos lista vacía
-    del = deletedlist_create(strategy);
-    if (!del) {
-        fprintf(stderr, "Error creando la lista de borrados\n");
-        index_free(indice);
-        return 1;
+    del = deletedlist_load(lst_filename);
+    if (!del)
+    {
+        
+        del = deletedlist_create(strategy);
+        if (!del)
+        {
+            fprintf(stderr, "Error creando la lista de borrados\n");
+            index_free(indice);
+            return 1;
+        }
     }
-}
 
     while (1)
     {
         printf("Type command and argument/s.\n");
+        fflush(stdout);
+
         if (!fgets(line, LINE_MAX, stdin))
             break;
         line[strcspn(line, "\r\n")] = 0;
-/*Aqui ya deja de escribirse si escribimos alfo*/
+        /*Aqui ya deja de escribirse si escribimos alfo*/
         if (strncmp(line, "add ", 4) == 0)
         {
             if (convert_record(line + 4, &rec))
@@ -92,7 +96,7 @@ if (!del) {
                 printf("Error. El formato introducido para add es incorrecto\n");
             }
         }
-      
+
         else if (strncmp(line, "del ", 4) == 0)
         {
             book_Id = atoi(line + 4);
@@ -122,7 +126,7 @@ if (!del) {
         }
         else if (strcmp(line, "printInd") == 0)
         {
-            for (i = 0; i <(int) indice->size; i++)
+            for (i = 0; i < (int)indice->size; i++)
             {
                 printf("Entry #%d\n    key: #%d\n    offset: #%ld\n",
                        i, indice->array[i].key, indice->array[i].offset);
