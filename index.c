@@ -109,3 +109,63 @@ void index_remove(Index *idx, int pos)
 
     idx->size--;
 }
+
+
+int index_save(Index *ind,const char *filename){
+   FILE *f=NULL;
+   int num;
+    if (ind==NULL|| filename==NULL)
+    {
+        return 0;
+    }
+    f=fopen(filename,"wb");
+    if (f==NULL)
+    {
+        fprintf(stderr, "Error al abrir %s para escribir el índice\n", filename);
+        return 0;
+    }
+    /*Escribimos cuantos libros hay en el indice*/
+    num=ind->size;
+    fwrite(&num,sizeof(int),1,f);
+    /*Vamos escribiendo todo el array uno por uno introduciendo todo el array*/
+    if (num>0)
+    {
+        fwrite(ind->array,sizeof(indexbook),num,f);
+    }
+    fclose(f);
+    return 1;
+}
+Index *index_load(const char *filename)
+{
+    FILE *fp = fopen(filename, "rb");
+    if (!fp) return NULL; 
+
+    Index *idx = malloc(sizeof(Index));
+    if (!idx) { fclose(fp); return NULL; }
+
+    int count = 0;
+    if (fread(&count, sizeof(int), 1, fp) != 1)
+    {
+        free(idx);
+        fclose(fp);
+        return NULL;
+    }
+
+    idx->capacity = (count > CAPACITY_INDEX) ? count : CAPACITY_INDEX;
+    idx->array = calloc(idx->capacity, sizeof(indexbook));
+    if (!idx->array)
+    {
+        free(idx);
+        fclose(fp);
+        return NULL;
+    }
+
+    idx->size = count;
+    if (count > 0)
+    {
+        fread(idx->array, sizeof(indexbook), count, fp);
+    }
+
+    fclose(fp);
+    return idx;
+}

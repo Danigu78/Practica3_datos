@@ -90,6 +90,7 @@ size_t deleteRecord(FILE *db, size_t offset)
  * ----------------------------------------------------------- */
 int db_add_record(const char *db_filename, DeletedList *deleted_list, Index *idx, Record *rec)
 {
+    indexbook entry;
     if (!db_filename || !deleted_list || !idx || !rec)
         return -1;
 
@@ -126,7 +127,15 @@ int db_add_record(const char *db_filename, DeletedList *deleted_list, Index *idx
         writeRecord(f, rec->bookID, rec->isbn, rec->title, rec->printedBy, &offset);
     }
 
-    indexbook entry = {rec->bookID, offset, record_size};
+   // CÓDIGO NUEVO (CORREGIDO):
+    
+    // Esto rellena toda la estructura (incluidos los huecos) con ceros
+    memset(&entry, 0, sizeof(indexbook)); 
+    
+    entry.key = rec->bookID;
+    entry.offset = offset;
+    entry.size = record_size;
+
     index_insert(idx, entry);
 
     deletedlist_save(deleted_list, "deleted.lst");
@@ -145,8 +154,8 @@ int db_delete_record(const char *db_filename, DeletedList *deleted_list, Index *
     if (!db_filename || !deleted_list || !idx) return -1;
 
     int pos;
-    if (index_binary_search(idx, bookID, &pos) < 0) {
-        printf("Record with BookID=%d not found\n", bookID);
+   if (index_binary_search(idx, bookID, &pos) < 0) {
+        printf("Item with key %d does not exist\n", bookID);
         return -1;
     }
 

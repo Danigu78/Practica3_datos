@@ -10,7 +10,7 @@
 int main(int argc, char *argv[])
 {
     int strategy;
-    char db_filename[256], lst_filename[256];
+    char db_filename[256], lst_filename[256], ind_filename[256];
     char line[LINE_MAX];
     Index *indice = NULL;
     DeletedList *del = NULL;
@@ -23,9 +23,8 @@ int main(int argc, char *argv[])
 
     if (argc < 3)
     {
-        fprintf(stderr, "Error. Tienes que usar %s <strategy> <db_name>\n", argv[0]);
-        fprintf(stderr, "Strategy: first_fit, best_fit, worst_fit\n");
-        return 1;
+        printf("Missing argument\n");
+        return 0;
     }
 
     if (strcmp(argv[1], "first_fit") == 0)
@@ -36,12 +35,13 @@ int main(int argc, char *argv[])
         strategy = WORSTFIT;
     else
     {
-        fprintf(stderr, "Estrategia desconocida: %s\n", argv[1]);
-        return 1;
+       printf("Unknown search strategy %s\n", argv[1]);
+        return 0;
     }
 
     snprintf(db_filename, 256, "%s.db", argv[2]);
     snprintf(lst_filename, 256, "%s.lst", argv[2]);
+    snprintf(ind_filename, 256, "%s.ind", argv[2]);
 
     // Asegurarse de que el fichero de datos existe
     f = fopen(db_filename, "rb");
@@ -51,40 +51,48 @@ int main(int argc, char *argv[])
         if (!f)
         {
             perror("No se pudo crear el fichero de datos");
-            return 1;
+            return 0;
         }
     }
     fclose(f);
 
-    indice = index_create();
+    /* --- CAMBIO CLAVE PARA EL TEST RELOAD --- */
+    /* 1. Intentamos cargar el índice existente */
+    indice = index_load(ind_filename);
+
+    /* 2. Si no existe (es NULL), creamos uno nuevo */
     if (!indice)
     {
-        fprintf(stderr, "Error creando el índice\n");
-        return 1;
+        indice = index_create();
+        if (!indice)
+        {
+            fprintf(stderr, "Error creando el índice\n");
+            return 0;
+        }
     }
+    /* ---------------------------------------- */
 
     del = deletedlist_load(lst_filename);
     if (!del)
     {
-        
         del = deletedlist_create(strategy);
         if (!del)
         {
             fprintf(stderr, "Error creando la lista de borrados\n");
             index_free(indice);
-            return 1;
+            return 0;
         }
     }
 
     while (1)
     {
-        printf("Type command and argument/s.\n");
+        printf("Type command and argument/s. Type exit\n");
         fflush(stdout);
 
         if (!fgets(line, LINE_MAX, stdin))
             break;
         line[strcspn(line, "\r\n")] = 0;
-        /*Aqui ya deja de escribirse si escribimos alfo*/
+
         if (strncmp(line, "add ", 4) == 0)
         {
             if (convert_record(line + 4, &rec))
@@ -96,7 +104,6 @@ int main(int argc, char *argv[])
                 printf("Error. El formato introducido para add es incorrecto\n");
             }
         }
-
         else if (strncmp(line, "del ", 4) == 0)
         {
             book_Id = atoi(line + 4);
@@ -128,8 +135,8 @@ int main(int argc, char *argv[])
         {
             for (i = 0; i < (int)indice->size; i++)
             {
-                printf("Entry #%d\n    key: #%d\n    offset: #%ld\n",
-                       i, indice->array[i].key, indice->array[i].offset);
+                printf("Entry #%d\n    key: #%d\n    offset: #%d\n    size: #%ld\n",
+                       i, indice->array[i].key, indice->array[i].offset, indice->array[i].size);
             }
         }
         else if (strcmp(line, "printLst") == 0)
@@ -150,7 +157,6 @@ int main(int argc, char *argv[])
                     printf("Error abriendo db para printRec\n");
                     break;
                 }
-
                 r = readRecord(f, indice->array[i].offset);
                 if (r)
                 {
@@ -171,8 +177,12 @@ int main(int argc, char *argv[])
     }
 
     deletedlist_save(del, lst_filename);
+    index_save(indice, ind_filename);
+
     deletedlist_destroy(del);
     index_free(indice);
+
+    printf("all done\n"); 
 
     return 0;
 }
