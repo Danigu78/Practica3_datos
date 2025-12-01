@@ -22,8 +22,13 @@ index.o: index.c index.h
 deletedlist.o: deletedlist.c deletedlist.h
 	$(CC) $(CFLAGS) -c deletedlist.c
 
-clean:
-	rm -f $(TARGET) *.o
+firstfit: $(TARGET)
+	./$(TARGET) first_fit test
 
-mrproper: clean
-	rm -f *.db *.ind *.lst
+bestfit: $(TARGET)
+	./$(TARGET) best_fit test
+
+worstfit: $(TARGET)
+	./$(TARGET) worst_fit test
+clean:
+	rm -f $(TARGET) *.o *.db *.ind *.lst

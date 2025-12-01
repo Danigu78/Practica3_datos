@@ -35,7 +35,7 @@ int main(int argc, char *argv[])
         strategy = WORSTFIT;
     else
     {
-       printf("Unknown search strategy %s\n", argv[1]);
+        printf("Unknown search strategy %s\n", argv[1]);
         return 0;
     }
 
@@ -73,7 +73,11 @@ int main(int argc, char *argv[])
     /* ---------------------------------------- */
 
     del = deletedlist_load(lst_filename);
-    if (!del)
+   if (del)
+   {
+    del->strategy=strategy;
+   }
+   else
     {
         del = deletedlist_create(strategy);
         if (!del)
@@ -143,11 +147,11 @@ int main(int argc, char *argv[])
         {
             for (i = 0; i < (int)del->size; i++)
             {
-                printf("Entry #%d\n    offset:#%ld    size:#%ld\n",
+                printf("Entry #%d\n    offset: #%ld    size: #%ld\n",
                        i, del->hueco[i].offset, del->hueco[i].size);
             }
         }
-        else if (strncmp(line, "printRec ", 9) == 0)
+        else if (strncmp(line, "printRec", 9) == 0)
         {
             for (i = 0; i < (int)indice->size; i++)
             {
@@ -182,7 +186,7 @@ int main(int argc, char *argv[])
     deletedlist_destroy(del);
     index_free(indice);
 
-    printf("all done\n"); 
+    printf("all done\n");
 
     return 0;
 }
