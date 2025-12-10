@@ -81,6 +81,7 @@ send "del 12345\r"
 expect "Record with BookID=12345 has been deleted"
 expect "exit"
 send "printInd\n"
+
 expect "Entry #0"
 expect "    key: #12346"
 expect "    offset: #0"

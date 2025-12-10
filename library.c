@@ -73,11 +73,11 @@ int main(int argc, char *argv[])
     /* ---------------------------------------- */
 
     del = deletedlist_load(lst_filename);
-   if (del)
-   {
-    del->strategy=strategy;
-   }
-   else
+    if (del)
+    {
+        del->strategy = strategy;
+    }
+    else
     {
         del = deletedlist_create(strategy);
         if (!del)
@@ -139,8 +139,11 @@ int main(int argc, char *argv[])
         {
             for (i = 0; i < (int)indice->size; i++)
             {
-                printf("Entry #%d\n    key: #%d\n    offset: #%d\n    size: #%ld\n",
-                       i, indice->array[i].key, indice->array[i].offset, indice->array[i].size);
+                printf("Entry #%d\n    key: #%d\n    offset: #%ld\n    size: #%ld\n",
+                       i,
+                       indice->array[i].key,
+                       ( long int)indice->array[i].offset,
+                       ( size_t)indice->array[i].size);
             }
         }
         else if (strcmp(line, "printLst") == 0)

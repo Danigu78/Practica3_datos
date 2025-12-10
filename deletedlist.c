@@ -100,11 +100,14 @@ int deletedlist_find(DeletedList *list, size_t needed_size, deletedbook *hb)
             list->hueco[i] = list->hueco[i + 1];
         list->size--;
     }
-    else
+    else /*Si el hueco es mas grande que lo que necesitamos, lo tenemos que meter en ese hueco y además hacer más pequeño el hueco*/
     {
-        list->hueco[found_index].offset += needed_size;
-        list->hueco[found_index].size -= needed_size;
+        list->hueco[found_index].offset += needed_size;/*Calculamos ek nuevo offset del hueco, es decir habrá que sumarle su offset actual antes de insertar mas el tamaño del registro que le vamos a insertar para actualizar el offset*/
+        list->hueco[found_index].size -= needed_size;/*Y restamos el tamaño*/
+        /*Reordenamos la lista ya que como hemos reducido el tamaño se puede romper el orden en el que estaba la lista de huecos*/
+        deletedlist_sort(list);
         hb->size = needed_size;
+
     }
 
     return 1;
@@ -130,8 +133,10 @@ int deletedlist_save(DeletedList *list, const char *filename)
     FILE *fp = fopen(filename, "wb");
     if (!fp) { fprintf(stderr, "Error al abrir %s\n", filename); return 0; }
 
-    if (fwrite(&list->strategy, sizeof(int), 1, fp) != 1) { fclose(fp); return 0; }
 
+    /*Primero en binario empezamos a escribir la estrategia*/
+    if (fwrite(&list->strategy, sizeof(int), 1, fp) != 1) { fclose(fp); return 0; }
+/*LUEGO UYA */
     for (int i = 0; i < (int)list->size; i++)
         if (fwrite(&list->hueco[i], sizeof(deletedbook), 1, fp) != 1)
         {
